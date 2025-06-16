@@ -1,3 +1,5 @@
+> **Note:** For Apple Silicon (M1/M2/M3/M4) installation instructions, see [apple-silicon-support.md](apple-silicon-support.md)
+
 ## Overview
 
 Auto Multiple Choice is a piece of software that can help you create and manage [multiple choice] questionnaires (MCQ), with automated marking. AMC is a free software, distributed under the [GPLv2+] license.

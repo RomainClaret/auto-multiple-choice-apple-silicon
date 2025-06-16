@@ -367,8 +367,10 @@ sub load_boxes {
                 [ Gtk3::TargetEntry->new( 'STRING', 0, ID_AMC_BOX ) ],
                 ['GDK_ACTION_MOVE'], );
             $self->{eb}->{$id}->signal_connect(
-                'drag-data-get' => \&source_drag_data_get,
-                $id
+                'drag-data-get' => sub {
+                    my ( $widget, $context, $data, $info, $time ) = @_;
+                    $data->set_text( $id, -1 );
+                }
             );
             $self->{eb}->{$id}->signal_connect(
                 'drag-begin' => sub {
@@ -507,18 +509,25 @@ sub toggle {
 }
 
 sub source_drag_data_get {
-    my ( $widget, $context, $data, $info, $time, $string ) = @_;
-    $data->set_text( $string, -1 );
+    my ( $widget, $context, $data, $info, $time, $id ) = @_;
+    $data->set_text( $id, -1 );
 }
 
 sub target_drag_data_received {
     my ( $widget, $context, $x, $y, $data, $info, $time, $args ) = @_;
     my ( $self, $cat ) = @$args;
     my $id = $data->get_text();
+    
+    # Check if $id is defined before using it
+    if ( !defined($id) || $id eq '' ) {
+        debug "Warning: Received undefined or empty drag data\n";
+        return;
+    }
+    
     if ( $self->dnd_mode() ) {
         debug "Page " . pageids_string( @{ $self->{page_id} } )
           . ": move $id to category $cat\n";
-        if ( $self->{position}->{$id} != $cat ) {
+        if ( exists($self->{position}->{$id}) && $self->{position}->{$id} != $cat ) {
             $self->{position}->{$id} = $cat;
             $self->refill;
         }

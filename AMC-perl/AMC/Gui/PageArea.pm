@@ -42,6 +42,7 @@ sub add_feuille {
     $self->{tx}      = 1;
     $self->{ty}      = 1;
     $self->{yfactor} = 1;
+    $self->{size_request_pending} = 0;
 
     $self->{min_render_size} = 10;
 
@@ -311,8 +312,15 @@ sub allocate_drawing {
         $self->{sx} = $sx;
         $self->{sy} = $sy;
 
-        $self->set_size_request( -1, $self->{ty} )
-          if ( $self->{yfactor} > 1 );
+        # Defer size request to avoid Gtk warning about negative dimensions
+        if ( $self->{yfactor} > 1 && !$self->{size_request_pending} ) {
+            $self->{size_request_pending} = 1;
+            Glib::Idle->add( sub {
+                $self->set_size_request( -1, $self->{ty} ) if $self->{ty} > 0;
+                $self->{size_request_pending} = 0;
+                return FALSE; # Remove idle handler
+            });
+        }
 
     } else {
         $self->{tx} = $r->{width};

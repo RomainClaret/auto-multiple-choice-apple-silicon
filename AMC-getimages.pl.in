@@ -430,7 +430,7 @@ if ( $use{pdfimages} || $use{pdftk} || $use{qpdf} ) {
 for my $fich (@f) {
     check_split_path($fich);
 
-    if ( $fich->{file} =~ /\.(pdf|eps|ps)$/i
+    if ( defined($fich->{file}) && $fich->{file} =~ /\.(pdf|eps|ps)$/i
         && commande_accessible('gs') && $use{gs} )
     {
         # ghostscript is preferred for PDF, EPS and PS files.
@@ -482,7 +482,7 @@ for my $fich (@f) {
         # Is this a vector format file? If so, we have to convert it
         # to bitmap
         my $vector = '';
-        if ( $fich->{file} =~ /\.(pdf|eps|ps)$/i ) {
+        if ( defined($fich->{file}) && $fich->{file} =~ /\.(pdf|eps|ps)$/i ) {
             $vector        = 1;
             $suffix_change = '.png';
             push @pre_options, '-density', $vector_density

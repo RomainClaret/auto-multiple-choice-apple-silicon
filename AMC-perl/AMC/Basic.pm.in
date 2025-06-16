@@ -1161,7 +1161,7 @@ sub clean_gtk_filenames {
             # }
             #utf8::decode($x);
             #$x;
-            Glib->filename_to_unicode($_);
+            $x ? Glib->filename_to_unicode($x) : '';
         }
     } @f;
     if ( wantarray() ) {

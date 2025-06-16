@@ -111,7 +111,9 @@ sub set_env {
 sub check_auto_capture_mode {
     my ($self) = @_;
 
-    if ( $self->{n} > 0 && $self->get('auto_capture_mode') < 0 ) {
+    my $mode = $self->get('auto_capture_mode');
+    my $n = $self->{n} || 0;
+    if ( $n > 0 && (!defined($mode) || $mode < 0) ) {
 
         # the auto_capture_mode (sheets photocopied or not) is not set,
         # but some capture has already been done. This looks weird, but

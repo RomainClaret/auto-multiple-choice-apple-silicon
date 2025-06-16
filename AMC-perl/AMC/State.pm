@@ -104,13 +104,19 @@ sub read {
             # printing information, and read it
             my $xml = $self->{archive}->contents( $self->{descfile} );
             if ($xml) {
-                $self->{data} = XMLin(
+                my $parsed_data = XMLin(
                     $xml,
                     ForceArray => 1,
                     ContentKey => 'content',
                     KeyAttr    => ['file']
                 );
-                $self->{archivefile} = $archivefile;
+                # Only update data if parsing succeeded
+                if ($parsed_data) {
+                    $self->{data} = $parsed_data;
+                    $self->{archivefile} = $archivefile;
+                } else {
+                    debug "Failed to parse XML from $archivefile";
+                }
             }
         }
     } else {
@@ -145,12 +151,48 @@ sub write {
     }
 
     # adds XML file to ARCHIVE
-    my $xml = XMLout(
-        $self->{data},
-        ContentKey => 'content',
-        KeyAttr    => ['file'],
-        RootName   => 'state',
-    );
+    # Ensure data is initialized with proper structure
+    if (!$self->{data}) {
+        $self->{data} = { 'md5' => {}, 'print' => [] };
+    }
+    if (!$self->{data}->{'md5'}) {
+        $self->{data}->{'md5'} = {};
+    }
+    if (!$self->{data}->{'print'}) {
+        $self->{data}->{'print'} = [];
+    }
+    
+    my $xml;
+    eval {
+        $xml = XMLout(
+            $self->{data},
+            ContentKey => 'content',
+            KeyAttr    => ['file'],
+            RootName   => 'state',
+            NoAttr => 1,
+            SuppressEmpty => 1
+        );
+    };
+    
+    # If XMLout failed or returned undef, create minimal XML
+    if ($@ || !defined($xml)) {
+        debug "Warning: XMLout failed or returned undefined value: " . ($@ || 'undef');
+        eval {
+            $xml = XMLout(
+                { 'md5' => {}, 'print' => [] },
+                KeyAttr    => ['file'],
+                RootName   => 'state',
+                NoAttr => 1,
+                SuppressEmpty => 1
+            );
+        };
+    }
+    
+    # Final fallback
+    if (!defined($xml)) {
+        $xml = '<?xml version="1.0"?><state></state>';
+    }
+    
     $self->{archive}->removeMember( $self->{descfile} );
     utf8::encode $xml;
     $self->{archive}->addString( $xml, $self->{descfile} );
