@@ -1,4 +1,6 @@
-> **Note:** For Apple Silicon (M1/M2/M3/M4) installation instructions, see [apple-silicon-support.md](apple-silicon-support.md)
+> **Important for macOS Users:** This software requires special installation for Apple Silicon Macs (M1/M2/M3/M4). 
+> 
+> **You MUST follow the instructions in [apple-silicon-support.md](apple-silicon-support.md)** - the standard installation will NOT work on macOS due to GTK environment requirements.
 
 ## Overview
 

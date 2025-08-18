@@ -1,10 +1,18 @@
 # Apple Silicon Support for Auto Multiple Choice (AMC)
 
+## Critical Information for macOS Users
+
+**⚠️ IMPORTANT:** On macOS, you CANNOT run AMC directly. You MUST use the `amc-launcher` script that gets installed automatically. This is due to GTK3 environment requirements specific to macOS.
+
+**Quick Start:**
+1. Follow the installation steps below
+2. Run AMC using: `amc-launcher` (NOT `auto-multiple-choice`)
+
 ## Why This Fork Exists
 
 This fork was created to enable Auto Multiple Choice (AMC) to run natively on Apple Silicon Macs. The original AMC project, while excellent software for creating and managing multiple choice questionnaires, was not compatible with the ARM64 architecture of Apple Silicon processors.
 
-After extensive debugging and modification, this fork includes all necessary changes to make AMC work properly on macOS with Apple Silicon processors.
+After extensive debugging and modification, this fork includes all necessary changes to make AMC work properly on macOS with Apple Silicon processors, including the required GTK environment setup.
 
 ## Compatibility
 
@@ -79,6 +87,11 @@ By default, this installs AMC to `~/.local`. To install elsewhere, set the PREFI
 PREFIX=/usr/local ./install-amc.sh
 ```
 
+The installation script automatically:
+- Installs the main `auto-multiple-choice` binary
+- Installs the `amc-launcher` script (required for macOS)
+- Sets up all Perl modules and LaTeX components
+
 4. Add the following to your shell configuration file (`~/.zshrc` or `~/.bash_profile`):
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
@@ -86,7 +99,7 @@ export PERL5LIB="$HOME/.local/libexec/lib/perl5:$PERL5LIB"
 export TEXMFHOME="$HOME/.local/share/texmf-local"
 ```
 
-**Note:** These shell exports alone are **not sufficient** for AMC to work properly. You will still need to use the launcher script (see Known Issues section below) because GTK applications require additional environment variables not included here.
+**Note:** These shell exports are for convenience but are **not sufficient** for AMC to work. You MUST use `amc-launcher` because GTK applications on macOS require additional environment variables that are automatically set by the launcher.
 
 5. Update your LaTeX distribution to find the AMC style file:
 ```bash
@@ -97,6 +110,13 @@ texhash "$HOME/.local/share/texmf-local"
 ```bash
 source ~/.zshrc
 ```
+
+7. **Test your installation:**
+```bash
+amc-launcher
+```
+
+You should see the AMC GUI launch. If not, check the troubleshooting section below.
 
 ## Known Issues and Solutions
 
