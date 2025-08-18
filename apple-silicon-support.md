@@ -120,74 +120,32 @@ This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025)
 - `PERL5LIB` - Perl module search paths
 - `DISPLAY` - X11 display connection (if XQuartz not properly configured)
 
-### Recommended Solution: Use a Launcher Script
+### Solution: Use the Installed Launcher Script
 
-Instead of running `auto-multiple-choice` directly, use one of these launcher scripts that ensure the environment is properly configured:
-
-#### Option 1: Use the Installed Launcher (Recommended)
-
-The installation process creates a working launcher at `/Users/$USER/.local/bin/amc-launcher`. Simply run:
+The installation process automatically creates and installs a launcher script that sets up the required GTK environment:
 
 ```bash
 amc-launcher
 ```
 
-#### Option 2: Create Your Own Launcher
+This launcher script:
+- Sets all required environment variables (GSETTINGS_SCHEMA_DIR, XDG_DATA_DIRS, etc.)
+- Ensures GTK3 can find its schemas and resources
+- Launches AMC with the proper environment
 
-If the installed launcher isn't in your PATH, create your own:
-
-1. Create the launcher script:
-```bash
-nano ~/amc-launcher.sh
-```
-
-2. Add this content:
-```bash
-#!/bin/bash
-
-# Set up complete environment for AMC
-export PATH="/Users/$USER/.local/bin:$PATH"
-export PERL5LIB="/Users/$USER/.local/libexec/lib/perl5:$PERL5LIB"
-export XDG_DATA_DIRS="/Users/$USER/.local/share:/opt/homebrew/share:$XDG_DATA_DIRS"
-export GSETTINGS_SCHEMA_DIR="/opt/homebrew/share/glib-2.0/schemas"
-export TEXMFHOME="/Users/$USER/.local/share/texmf-local"
-
-# Launch AMC
-exec /Users/$USER/.local/bin/auto-multiple-choice "$@"
-```
-
-3. Make it executable:
-```bash
-chmod +x ~/amc-launcher.sh
-```
-
-4. Use this launcher to run AMC:
-```bash
-~/amc-launcher.sh
-```
-
-Both approaches ensure AMC works reliably by setting up all required environment variables for GTK applications on macOS.
+**Why is this necessary?** GTK3 applications on macOS require specific environment variables to locate schemas and resources. Without these, GTK fails to initialize and AMC falls back to command-line mode, resulting in LaTeX compilation errors instead of the GUI.
 
 ## Usage
 
-After installation, you can run AMC using one of these methods:
+After installation, run AMC using the installed launcher:
 
-**Recommended (using installed launcher):**
 ```bash
 amc-launcher
 ```
 
-**Alternative (using custom launcher):**
-```bash
-~/amc-launcher.sh
-```
+**Do not run `auto-multiple-choice` directly** - it will fail with GTK environment errors on macOS.
 
-**Not recommended (may fail with environment errors):**
-```bash
-auto-multiple-choice
-```
-
-If you encounter module loading errors or GUI initialization problems, always use one of the launcher script methods above.
+The launcher ensures all GTK environment variables are set correctly for the GUI to work properly.
 
 ## Troubleshooting
 
@@ -218,9 +176,9 @@ If AMC runs but no GUI window appears:
 
 If you see "Options : latex_engine" or LaTeX compilation starting instead of GUI:
 
-1. **Ensure you're using the launcher script** (not `auto-multiple-choice` directly)
-2. **Check all environment variables are set** in your launcher script
-3. **Try the pre-installed launcher:** `amc-launcher` instead of `~/amc-launcher.sh`
+1. **Ensure you're using `amc-launcher`** (not `auto-multiple-choice` directly)
+2. **Check that amc-launcher is installed:** `which amc-launcher`
+3. **Verify the launcher is executable:** `ls -la $(which amc-launcher)`
 
 ### Permission Denied Errors
 
@@ -228,12 +186,12 @@ If you get permission errors:
 
 1. **Make launcher executable:**
    ```bash
-   chmod +x ~/amc-launcher.sh
    chmod +x ~/.local/bin/amc-launcher
    ```
 
 2. **Check file permissions:**
    ```bash
+   ls -la ~/.local/bin/amc-launcher
    ls -la ~/.local/bin/auto-multiple-choice
    ```
 

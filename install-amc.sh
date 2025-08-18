@@ -38,6 +38,14 @@ sed -e 's|@/PERLPATH/@|/opt/homebrew/opt/perl/bin/perl|g' \
 chmod +x auto-multiple-choice
 cp auto-multiple-choice "$PREFIX/bin/"
 
+# Install launcher script
+echo "Installing launcher script..."
+sed -e 's|PREFIX=${PREFIX:-$HOME/.local}|PREFIX='"$PREFIX"'|g' \
+    amc-launcher > amc-launcher-processed
+chmod +x amc-launcher-processed
+cp amc-launcher-processed "$PREFIX/bin/amc-launcher"
+rm -f amc-launcher-processed
+
 # Process and copy Perl modules
 echo "Installing Perl modules..."
 # Process Basic.pm.in first
@@ -111,3 +119,8 @@ echo ""
 echo "For LaTeX to find the AMC style file, run:"
 echo "  export TEXMFHOME=\"$PREFIX/share/texmf-local\""
 echo "  texhash \"$PREFIX/share/texmf-local\""
+echo ""
+echo "IMPORTANT: On macOS, use the launcher script instead of auto-multiple-choice directly:"
+echo "  amc-launcher"
+echo ""
+echo "The launcher sets up the required GTK environment for the GUI to work properly."

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# AMC Launcher for macOS
+# Sets up the required environment for GTK3 applications on macOS
+
+# Set installation prefix (can be overridden)
+PREFIX=${PREFIX:-$HOME/.local}
+
+# Set up complete environment for AMC
+export PATH="$PREFIX/bin:$PATH"
+export PERL5LIB="$PREFIX/libexec/lib/perl5:$PERL5LIB"
+export XDG_DATA_DIRS="$PREFIX/share:/opt/homebrew/share:$XDG_DATA_DIRS"
+export GSETTINGS_SCHEMA_DIR="/opt/homebrew/share/glib-2.0/schemas"
+export TEXMFHOME="$PREFIX/share/texmf-local"
+
+# Launch AMC
+exec "$PREFIX/bin/auto-multiple-choice" "$@"
