@@ -103,7 +103,19 @@ Can't locate AMC/Basic.pm in @INC (you may need to install the AMC::Basic module
 
 ### Recommended Solution: Use a Launcher Script
 
-Instead of running `auto-multiple-choice` directly, create a launcher script that ensures the environment is properly configured:
+Instead of running `auto-multiple-choice` directly, use one of these launcher scripts that ensure the environment is properly configured:
+
+#### Option 1: Use the Installed Launcher (Recommended)
+
+The installation process creates a working launcher at `/Users/$USER/.local/bin/amc-launcher`. Simply run:
+
+```bash
+amc-launcher
+```
+
+#### Option 2: Create Your Own Launcher
+
+If the installed launcher isn't in your PATH, create your own:
 
 1. Create the launcher script:
 ```bash
@@ -113,8 +125,16 @@ nano ~/amc-launcher.sh
 2. Add this content:
 ```bash
 #!/bin/bash
+
+# Set up complete environment for AMC
+export PATH="/Users/$USER/.local/bin:$PATH"
 export PERL5LIB="/Users/$USER/.local/libexec/lib/perl5:$PERL5LIB"
-/Users/$USER/.local/bin/auto-multiple-choice "$@"
+export XDG_DATA_DIRS="/Users/$USER/.local/share:/opt/homebrew/share:$XDG_DATA_DIRS"
+export GSETTINGS_SCHEMA_DIR="/opt/homebrew/share/glib-2.0/schemas"
+export TEXMFHOME="/Users/$USER/.local/share/texmf-local"
+
+# Launch AMC
+exec /Users/$USER/.local/bin/auto-multiple-choice "$@"
 ```
 
 3. Make it executable:
@@ -127,21 +147,28 @@ chmod +x ~/amc-launcher.sh
 ~/amc-launcher.sh
 ```
 
-This approach ensures AMC works reliably regardless of your shell session state.
+Both approaches ensure AMC works reliably by setting up all required environment variables for GTK applications on macOS.
 
 ## Usage
 
-After installation, you can run AMC using the recommended launcher script:
+After installation, you can run AMC using one of these methods:
+
+**Recommended (using installed launcher):**
+```bash
+amc-launcher
+```
+
+**Alternative (using custom launcher):**
 ```bash
 ~/amc-launcher.sh
 ```
 
-**Alternative (may not work in all shell sessions):**
+**Not recommended (may fail with environment errors):**
 ```bash
 auto-multiple-choice
 ```
 
-If you encounter module loading errors, always use the launcher script method above.
+If you encounter module loading errors or GUI initialization problems, always use one of the launcher script methods above.
 
 ## Keeping Up to Date
 
