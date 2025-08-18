@@ -91,12 +91,57 @@ texhash "$HOME/.local/share/texmf-local"
 source ~/.zshrc
 ```
 
+## Known Issues and Solutions
+
+### PERL5LIB Module Loading Issue
+
+Due to shell session management differences on macOS, the `PERL5LIB` environment variable may not always be properly loaded when running AMC directly. This can result in errors like:
+
+```
+Can't locate AMC/Basic.pm in @INC (you may need to install the AMC::Basic module)
+```
+
+### Recommended Solution: Use a Launcher Script
+
+Instead of running `auto-multiple-choice` directly, create a launcher script that ensures the environment is properly configured:
+
+1. Create the launcher script:
+```bash
+nano ~/amc-launcher.sh
+```
+
+2. Add this content:
+```bash
+#!/bin/bash
+export PERL5LIB="/Users/$USER/.local/libexec/lib/perl5:$PERL5LIB"
+/Users/$USER/.local/bin/auto-multiple-choice "$@"
+```
+
+3. Make it executable:
+```bash
+chmod +x ~/amc-launcher.sh
+```
+
+4. Use this launcher to run AMC:
+```bash
+~/amc-launcher.sh
+```
+
+This approach ensures AMC works reliably regardless of your shell session state.
+
 ## Usage
 
-After installation, you can run AMC with:
+After installation, you can run AMC using the recommended launcher script:
+```bash
+~/amc-launcher.sh
+```
+
+**Alternative (may not work in all shell sessions):**
 ```bash
 auto-multiple-choice
 ```
+
+If you encounter module loading errors, always use the launcher script method above.
 
 ## Keeping Up to Date
 
