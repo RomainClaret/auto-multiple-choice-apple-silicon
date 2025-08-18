@@ -30,6 +30,9 @@ Before installing, ensure you have the following installed via Homebrew:
 # Install Homebrew if not already installed
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+# Install XQuartz (required for GUI applications)
+brew install --cask xquartz
+
 # Install required dependencies
 brew install perl
 brew install opencv
@@ -50,6 +53,8 @@ cpan install Image::Magick
 cpan install Email::MIME
 cpan install Email::Sender
 ```
+
+**Important:** After installing XQuartz, you must **logout and login again** (or restart your Mac) for the X11 system to be properly initialized.
 
 ## Installation
 
@@ -81,6 +86,8 @@ export PERL5LIB="$HOME/.local/libexec/lib/perl5:$PERL5LIB"
 export TEXMFHOME="$HOME/.local/share/texmf-local"
 ```
 
+**Note:** These shell exports alone are **not sufficient** for AMC to work properly. You will still need to use the launcher script (see Known Issues section below) because GTK applications require additional environment variables not included here.
+
 5. Update your LaTeX distribution to find the AMC style file:
 ```bash
 texhash "$HOME/.local/share/texmf-local"
@@ -93,13 +100,25 @@ source ~/.zshrc
 
 ## Known Issues and Solutions
 
-### PERL5LIB Module Loading Issue
+### GTK Environment Configuration Issue
 
-Due to shell session management differences on macOS, the `PERL5LIB` environment variable may not always be properly loaded when running AMC directly. This can result in errors like:
+AMC uses GTK3 for its graphical interface, which requires specific environment variables on macOS that are not set by default. When these variables are missing, AMC fails to initialize the GUI and falls back to command-line mode, often resulting in LaTeX compilation errors.
 
+**Common error symptoms:**
 ```
 Can't locate AMC/Basic.pm in @INC (you may need to install the AMC::Basic module)
 ```
+or
+```
+Options : latex_engine
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025)
+```
+
+**Root cause:** Missing GTK environment variables:
+- `GSETTINGS_SCHEMA_DIR` - GTK settings schema location
+- `XDG_DATA_DIRS` - GTK resource directories  
+- `PERL5LIB` - Perl module search paths
+- `DISPLAY` - X11 display connection (if XQuartz not properly configured)
 
 ### Recommended Solution: Use a Launcher Script
 
@@ -169,6 +188,54 @@ auto-multiple-choice
 ```
 
 If you encounter module loading errors or GUI initialization problems, always use one of the launcher script methods above.
+
+## Troubleshooting
+
+### GUI Doesn't Appear
+
+If AMC runs but no GUI window appears:
+
+1. **Check if XQuartz is running:**
+   ```bash
+   ps aux | grep -i xquartz
+   ```
+
+2. **Manually start XQuartz:**
+   ```bash
+   open -a XQuartz
+   ```
+
+3. **Verify DISPLAY is set:**
+   ```bash
+   echo $DISPLAY
+   ```
+   Should show `:0` or similar. If empty, run:
+   ```bash
+   export DISPLAY=:0
+   ```
+
+### Still Getting LaTeX Compilation Errors
+
+If you see "Options : latex_engine" or LaTeX compilation starting instead of GUI:
+
+1. **Ensure you're using the launcher script** (not `auto-multiple-choice` directly)
+2. **Check all environment variables are set** in your launcher script
+3. **Try the pre-installed launcher:** `amc-launcher` instead of `~/amc-launcher.sh`
+
+### Permission Denied Errors
+
+If you get permission errors:
+
+1. **Make launcher executable:**
+   ```bash
+   chmod +x ~/amc-launcher.sh
+   chmod +x ~/.local/bin/amc-launcher
+   ```
+
+2. **Check file permissions:**
+   ```bash
+   ls -la ~/.local/bin/auto-multiple-choice
+   ```
 
 ## Keeping Up to Date
 
