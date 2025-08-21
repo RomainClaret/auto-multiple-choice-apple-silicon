@@ -21,6 +21,35 @@ mkdir -p "$PREFIX/libexec/lib/perl5/AMC"
 echo "Installing binaries..."
 cp AMC-detect AMC-buildpdf AMC-pdfformfields "$PREFIX/lib/AMC/exec/"
 
+# Handle OpenCV version compatibility
+echo "Checking OpenCV compatibility..."
+if [ -d "/opt/homebrew/opt/opencv/lib" ]; then
+    # Get the actual OpenCV version installed
+    OPENCV_VERSION=$(ls /opt/homebrew/opt/opencv/lib/libopencv_core.*.dylib 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    
+    # Check what version AMC-detect expects
+    EXPECTED_LIBS=$(otool -L "$PREFIX/lib/AMC/exec/AMC-detect" 2>/dev/null | grep libopencv | grep -oE 'libopencv_[a-z]+\.[0-9]+\.dylib' | sort -u)
+    
+    if [ -n "$EXPECTED_LIBS" ]; then
+        echo "Creating OpenCV compatibility symlinks..."
+        for lib in $EXPECTED_LIBS; do
+            # Extract the library base name and expected version
+            base_name=$(echo "$lib" | sed 's/\.[0-9]*\.dylib$//')
+            expected_ver=$(echo "$lib" | grep -oE '\.[0-9]+\.dylib$' | grep -oE '[0-9]+')
+            
+            # Find the actual library file
+            actual_lib=$(ls /opt/homebrew/opt/opencv/lib/${base_name}.*.dylib 2>/dev/null | grep -v '@' | head -1)
+            
+            if [ -n "$actual_lib" ] && [ ! -e "/opt/homebrew/opt/opencv/lib/$lib" ]; then
+                # Create symlink if it doesn't exist
+                ln -sf "$(basename "$actual_lib")" "/opt/homebrew/opt/opencv/lib/$lib" 2>/dev/null || \
+                    echo "  Warning: Could not create symlink for $lib (may need permissions)"
+            fi
+        done
+        echo "OpenCV compatibility links created."
+    fi
+fi
+
 # Process and copy Perl scripts
 echo "Installing Perl scripts..."
 for script in AMC-*.pl.in; do

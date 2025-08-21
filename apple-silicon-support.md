@@ -169,6 +169,29 @@ The launcher ensures all GTK environment variables are set correctly for the GUI
 
 ## Troubleshooting
 
+### OpenCV Library Version Mismatch
+
+If you encounter errors like:
+```
+Library not loaded: /opt/homebrew/opt/opencv/lib/libopencv_core.411.dylib
+Reason: tried: '/opt/homebrew/opt/opencv/lib/libopencv_core.411.dylib' (no such file)
+```
+
+This occurs when AMC-detect was compiled against a specific OpenCV version (e.g., 4.11) but Homebrew has updated to a newer version (e.g., 4.12). The installer script now automatically handles this by creating compatibility symlinks.
+
+**Manual Fix (if needed):**
+```bash
+# Check your OpenCV version
+ls /opt/homebrew/opt/opencv/lib/libopencv_core.*.dylib
+
+# Create symlinks (replace 412 with your actual version)
+cd /opt/homebrew/opt/opencv/lib/
+ln -s libopencv_core.412.dylib libopencv_core.411.dylib
+ln -s libopencv_highgui.412.dylib libopencv_highgui.411.dylib
+ln -s libopencv_imgproc.412.dylib libopencv_imgproc.411.dylib
+ln -s libopencv_imgcodecs.412.dylib libopencv_imgcodecs.411.dylib
+```
+
 ### GUI Doesn't Appear
 
 If AMC runs but no GUI window appears:
