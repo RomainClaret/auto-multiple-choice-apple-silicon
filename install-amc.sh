@@ -17,38 +17,30 @@ mkdir -p "$PREFIX/share/auto-multiple-choice/models"
 mkdir -p "$PREFIX/share/texmf-local/tex/latex/AMC"
 mkdir -p "$PREFIX/libexec/lib/perl5/AMC"
 
-# Copy binaries
+# Rebuild the C++ binaries against the currently-installed OpenCV.
+#
+# The binaries link OpenCV dylibs by their major.minor soname (e.g.
+# libopencv_core.412.dylib for 4.12). Homebrew deletes the old soname on every
+# `brew upgrade opencv`, which breaks any binary built against the previous
+# version. Rebuilding here re-links them against whatever `pkg-config opencv4`
+# currently resolves to, so the install always matches the live OpenCV.
+#
+# Do NOT replace this with symlinks from the new soname to the old name: OpenCV
+# does not guarantee ABI stability across minor versions, and a mismatched load
+# can silently misread marks in a grading tool.
+echo "Rebuilding binaries against current OpenCV..."
+rm -f AMC-detect AMC-buildpdf AMC-pdfformfields
+make AMC-detect AMC-buildpdf AMC-pdfformfields
+
+# Verify AMC-detect linked against an OpenCV that is actually present.
+missing=$(otool -L AMC-detect 2>/dev/null | grep -oE '/opt/homebrew/[^ ]*libopencv_core[^ ]*\.dylib' | head -1)
+if [ -n "$missing" ] && [ ! -e "$missing" ]; then
+    echo "ERROR: AMC-detect links a missing OpenCV ($missing). Aborting install." >&2
+    exit 1
+fi
+
 echo "Installing binaries..."
 cp AMC-detect AMC-buildpdf AMC-pdfformfields "$PREFIX/lib/AMC/exec/"
-
-# Handle OpenCV version compatibility
-echo "Checking OpenCV compatibility..."
-if [ -d "/opt/homebrew/opt/opencv/lib" ]; then
-    # Get the actual OpenCV version installed
-    OPENCV_VERSION=$(ls /opt/homebrew/opt/opencv/lib/libopencv_core.*.dylib 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-    
-    # Check what version AMC-detect expects
-    EXPECTED_LIBS=$(otool -L "$PREFIX/lib/AMC/exec/AMC-detect" 2>/dev/null | grep libopencv | grep -oE 'libopencv_[a-z]+\.[0-9]+\.dylib' | sort -u)
-    
-    if [ -n "$EXPECTED_LIBS" ]; then
-        echo "Creating OpenCV compatibility symlinks..."
-        for lib in $EXPECTED_LIBS; do
-            # Extract the library base name and expected version
-            base_name=$(echo "$lib" | sed 's/\.[0-9]*\.dylib$//')
-            expected_ver=$(echo "$lib" | grep -oE '\.[0-9]+\.dylib$' | grep -oE '[0-9]+')
-            
-            # Find the actual library file
-            actual_lib=$(ls /opt/homebrew/opt/opencv/lib/${base_name}.*.dylib 2>/dev/null | grep -v '@' | head -1)
-            
-            if [ -n "$actual_lib" ] && [ ! -e "/opt/homebrew/opt/opencv/lib/$lib" ]; then
-                # Create symlink if it doesn't exist
-                ln -sf "$(basename "$actual_lib")" "/opt/homebrew/opt/opencv/lib/$lib" 2>/dev/null || \
-                    echo "  Warning: Could not create symlink for $lib (may need permissions)"
-            fi
-        done
-        echo "OpenCV compatibility links created."
-    fi
-fi
 
 # Process and copy Perl scripts
 echo "Installing Perl scripts..."

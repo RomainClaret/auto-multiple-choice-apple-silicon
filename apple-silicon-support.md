@@ -177,20 +177,22 @@ Library not loaded: /opt/homebrew/opt/opencv/lib/libopencv_core.411.dylib
 Reason: tried: '/opt/homebrew/opt/opencv/lib/libopencv_core.411.dylib' (no such file)
 ```
 
-This occurs when AMC-detect was compiled against a specific OpenCV version (e.g., 4.11) but Homebrew has updated to a newer version (e.g., 4.12). The installer script now automatically handles this by creating compatibility symlinks.
+This occurs when AMC-detect was compiled against a specific OpenCV version (e.g., 4.11) but Homebrew has updated to a newer version (e.g., 4.12). OpenCV encodes major.minor in the dylib soname (`.411` vs `.412`) and deletes the old soname on upgrade, so a binary built against the old version can no longer load.
 
-**Manual Fix (if needed):**
+**Fix: rebuild against the current OpenCV.** This is what `install-amc.sh` now does automatically — re-run it after any `brew upgrade opencv`:
 ```bash
-# Check your OpenCV version
-ls /opt/homebrew/opt/opencv/lib/libopencv_core.*.dylib
-
-# Create symlinks (replace 412 with your actual version)
-cd /opt/homebrew/opt/opencv/lib/
-ln -s libopencv_core.412.dylib libopencv_core.411.dylib
-ln -s libopencv_highgui.412.dylib libopencv_highgui.411.dylib
-ln -s libopencv_imgproc.412.dylib libopencv_imgproc.411.dylib
-ln -s libopencv_imgcodecs.412.dylib libopencv_imgcodecs.411.dylib
+./install-amc.sh
 ```
+
+Or rebuild just the affected binaries manually:
+```bash
+rm -f AMC-detect AMC-buildpdf AMC-pdfformfields
+make AMC-detect AMC-buildpdf AMC-pdfformfields
+otool -L AMC-detect | grep opencv          # confirm the new version (e.g. .412)
+cp AMC-detect AMC-buildpdf AMC-pdfformfields ~/.local/lib/AMC/exec/
+```
+
+**Do not** symlink the new soname to the old name (e.g. `ln -s libopencv_core.412.dylib libopencv_core.411.dylib`). OpenCV does not guarantee ABI stability across minor versions, so forcing a 4.11-built binary to load 4.12 code can crash or silently misread marks — unacceptable for grading. The symlink is also wiped by the next `brew upgrade`, so it is not even a durable workaround.
 
 ### GUI Doesn't Appear
 
